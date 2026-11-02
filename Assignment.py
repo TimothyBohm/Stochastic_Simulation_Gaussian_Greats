@@ -113,10 +113,19 @@ def run_experiments(k, R, r, sample_sizes, xc=0, yc=0, zc=0, rng=None):
         rng = random.Random(42)
 
     for N in sample_sizes:
-        volume, error = monte_carlo_volume(k, R, r, N, xc=xc, yc=yc, zc=zc, rng=rng)
+        #Use same seed for reproducibility and fairness in convergence graphs
+        experiment_rng = random.Random(42) 
+        volume, error = monte_carlo_volume(k, R, r, N, xc=xc, yc=yc, zc=zc, rng=experiment_rng)
         results.append((N, volume, error))
 
     return results
 
-print("Case (a):", monte_carlo_volume(1, 0.75, 0.4, 100000))
-print("Case (b):", monte_carlo_volume(1, 0.5, 0.5, 100000))
+#Setting up and running the experiments for exercie 1, case (a) and case (b)
+sample_sizes = [100, 500, 1000, 5000, 10000, 25000, 50000, 100000]
+
+results_a = run_experiments(1, 0.75, 0.4, sample_sizes)
+results_b = run_experiments(1, 0.5, 0.5, sample_sizes)
+
+
+#Setting up and running the experiments for exercise 3(a)
+results_3a = run_experiments(1, 0.75, 0.4, sample_sizes, zc=0.1, rng=random.Random(69))
