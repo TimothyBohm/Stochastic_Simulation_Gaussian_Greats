@@ -1,6 +1,16 @@
 import random
 import math
 
+#Geometry Checks
+def inside_sphere(x, y, z, k):
+    return x**2 + y**2 + z**2 <= k**2
+
+def inside_torus(x, y, z, R, r, xc=0, yc=0, zc=0):
+    return ((math.sqrt((x-xc)**2 + (y-yc)**2) - R)**2 + (z-zc)**2 <= r**2)
+
+def inside_intersection(x, y, z, k, R, r, xc=0, yc=0, zc=0):
+    return (inside_sphere(x, y, z, k) and inside_torus(x, y, z, R, r, xc, yc, zc))
+
 
 def bounding_box(k, R, r, xc=0, yc=0, zc=0):
     outer_radius = R + r
