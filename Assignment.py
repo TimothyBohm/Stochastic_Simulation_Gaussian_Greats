@@ -1,6 +1,9 @@
 import random
 import math
 
+#Random Number Generator
+rng = random.Random(42)
+
 #Geometry Checks
 def inside_sphere(x, y, z, k):
     return x**2 + y**2 + z**2 <= k**2
@@ -34,15 +37,20 @@ def estimate_standard_error(inside, N, box_volume):
     return box_volume * math.sqrt(p_hat * (1 - p_hat) / N) 
 
 
-def generate_points(k, R, r, N):
-    x_bounds, y_bounds, z_bounds = bounding_box(k, R, r) # generate random points
+def generate_points(k, R, r, N, xc=0, yc=0, zc=0, rng=None):
+    #Generate N uniformly distributed points within the bounding box
+    if rng is None:
+        rng = random.Random()
+
+    x_bounds, y_bounds, z_bounds = bounding_box(k, R, r, xc, yc, zc)
 
     points = []
-    for i in range(N): 
-        x = random.uniform(*x_bounds) # equivalent to random.uniform(x_bounds[0], x_bounds[1])
-        y = random.uniform(*y_bounds) # the choice of uniform distribution is quite obvious
-        z = random.uniform(*z_bounds)
+    for i in range(N):
+        x = rng.uniform(*x_bounds)
+        y = rng.uniform(*y_bounds)
+        z = rng.uniform(*z_bounds)
         points.append((x, y, z))
+
     return points
 
 
