@@ -1,11 +1,16 @@
 import random
 import math
 
-def bounding_box(k, R, r): # Basically creates a box arround the intersection area
-    L = min(k, R + r) #choosest the smallest, either k sphere radius or R + r torus radius
-    H = min(k, r)
 
-    return (-L, L), (-L, L), (-H, H)
+def bounding_box(k, R, r, xc=0, yc=0, zc=0):
+    outer_radius = R + r
+
+    x_bounds = (max(-k, xc - outer_radius), min(k, xc + outer_radius))
+    y_bounds = (max(-k, yc - outer_radius), min(k, yc + outer_radius))
+    z_bounds = (max(-k, zc - r), min(k, zc + r))
+
+    return x_bounds, y_bounds, z_bounds
+
 
 def generate_points(k, R, r, N):
     x_bounds, y_bounds, z_bounds = bounding_box(k, R, r) # generate random points
