@@ -106,5 +106,17 @@ def monte_carlo_volume(k, R, r, N, method="random",
     
     return volume, error
 
+def run_experiments(k, R, r, sample_sizes, xc=0, yc=0, zc=0, rng=None):
+    results = []
+
+    if rng is None:
+        rng = random.Random(42)
+
+    for N in sample_sizes:
+        volume, error = monte_carlo_volume(k, R, r, N, xc=xc, yc=yc, zc=zc, rng=rng)
+        results.append((N, volume, error))
+
+    return results
+
 print("Case (a):", monte_carlo_volume(1, 0.75, 0.4, 100000))
 print("Case (b):", monte_carlo_volume(1, 0.5, 0.5, 100000))
