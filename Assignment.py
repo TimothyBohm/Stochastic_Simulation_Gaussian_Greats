@@ -24,6 +24,13 @@ def bounding_box(k, R, r, xc=0, yc=0, zc=0):
 
     return x_bounds, y_bounds, z_bounds
 
+def small_bounding_box(xc=0, yc=0, zc=0.1, half_width=0.75, half_height=0.25):
+    x_bounds = (xc - half_width, xc + half_width)
+    y_bounds = (yc - half_width, yc + half_width)
+    z_bounds = (zc - half_height, zc + half_height)
+
+    return x_bounds, y_bounds, z_bounds
+
 def box_volume(bounds):
     volume = 1.0
     for low, high in bounds:
@@ -75,15 +82,39 @@ def generate_logistic_points(k, R, r, N, x0, y0, z0, m=3.8, xc=0, yc=0, zc=0):
 
     return points
 
-def monte_carlo_volume(k, R, r, N, method="random",
+def generate_mixture_points(k, R, r, N, p, xc=0, yc=0, zc=0.1, rng=None):
+    if rng is None:
+        rng = random.Random()
+
+    x_bounds_B, y_bounds_B, z_bounds_B = bounding_box(k, R, r, xc, yc, zc)
+    x_bounds_S, y_bounds_S, z_bounds_S = small_bounding_box(xc, yc, zc)
+
+    points = []
+    for i in range(N):
+        if rng.random() < p:
+            x = rng.uniform(*x_bounds_B)
+            y = rng.uniform(*y_bounds_B)
+            z = rng.uniform(*z_bounds_B)
+        else:
+            x = rng.uniform(*x_bounds_S)
+            y = rng.uniform(*y_bounds_S)
+            z = rng.uniform(*z_bounds_S)
+        points.append((x, y, z))
+
+    return points
+
+
+def monte_carlo_volume(k, R, r, N, method="random", p=0.5,
                        x0=0.1, y0=0.2, z0=0.3, xc=0, yc=0, zc=0, rng=None):
     
     if method == "random":
         points = generate_points(k, R, r, N, xc, yc, zc, rng)
     elif method == "logistic":
         points = generate_logistic_points(k, R, r, N, x0, y0, z0, xc, yc, zc)
+    elif method == "mixture":
+        points = generate_mixture_points(k, R, r, N, p, xc, yc, zc, rng)
     else:
-        raise ValueError("Method must be 'random' or 'logistic'")
+        raise ValueError("Method must be 'random', 'logistic', or 'mixture'")
 
     inside = 0 #initial value of points inside
 
@@ -96,7 +127,7 @@ def monte_carlo_volume(k, R, r, N, method="random",
     volume_box = box_volume(bounds)
     
     #Estimate standard error for independent uniform samples
-    if method == "random":
+    if method == "random"  or method == "mixture":
         error = estimate_standard_error(inside, N, volume_box)
     else:
         error = None
@@ -116,6 +147,20 @@ def run_experiments(k, R, r, sample_sizes, xc=0, yc=0, zc=0, rng=None):
         #Use same seed for reproducibility and fairness in convergence graphs
         experiment_rng = random.Random(46) 
         volume, error = monte_carlo_volume(k, R, r, N, xc=xc, yc=yc, zc=zc, rng=experiment_rng)
+        results.append((N, volume, error))
+
+    return results
+
+def run_mixture_experiments(k, R, r, sample_sizes, p=0.5, xc=0, yc=0, zc=0.1, rng=None):
+    results = []
+
+    if rng is None:
+        rng = random.Random(42)
+
+    for N in sample_sizes:
+        #Use same seed for reproducibility and fairness in convergence graphs
+        experiment_rng = random.Random(46) 
+        volume, error = monte_carlo_volume(k, R, r, N, method="mixture", p=p, xc=xc, yc=yc, zc=zc, rng=experiment_rng)
         results.append((N, volume, error))
 
     return results
