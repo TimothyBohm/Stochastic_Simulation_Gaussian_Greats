@@ -54,8 +54,8 @@ def generate_points(k, R, r, N, xc=0, yc=0, zc=0, rng=None):
     return points
 
 
-def generate_logistic_points(k, R, r, N, x0, y0, z0, m=3.8):
-    x_bounds, y_bounds, z_bounds = bounding_box(k, R, r)
+def generate_logistic_points(k, R, r, N, x0, y0, z0, m=3.8, xc=0, yc=0, zc=0):
+    x_bounds, y_bounds, z_bounds = bounding_box(k, R, r, xc, yc, zc)
 
     X, Y, Z = x0, y0, z0
     points = []
@@ -76,35 +76,35 @@ def generate_logistic_points(k, R, r, N, x0, y0, z0, m=3.8):
     return points
 
 def monte_carlo_volume(k, R, r, N, method="random",
-                       x0=0.1, y0=0.2, z0=0.3):
+                       x0=0.1, y0=0.2, z0=0.3, xc=0, yc=0, zc=0, rng=None):
     
     if method == "random":
-        points = generate_points(k, R, r, N)
-
+        points = generate_points(k, R, r, N, xc, yc, zc, rng)
     elif method == "logistic":
-        points = generate_logistic_points(k, R, r, N, x0, y0, z0)
-
+        points = generate_logistic_points(k, R, r, N, x0, y0, z0, xc, yc, zc)
     else:
         raise ValueError("Method must be 'random' or 'logistic'")
 
     inside = 0 #initial value of points inside
 
-    for x, y, z in points:
-        sphere = x**2 + y**2 + z**2 <= k**2 #check wether the point is inside the sphere
-        torus = (math.sqrt(x**2 + y**2) - R)**2 + z**2 <= r**2 #check wether the point is inside the torus
-
-        if sphere and torus:
-            inside += 1 #so we essentially add 1 for every point inside
-
-    x_bounds, y_bounds, z_bounds = bounding_box(k, R, r)
-
-    box_volume = (
-        (x_bounds[1] - x_bounds[0])
-        * (y_bounds[1] - y_bounds[0])
-        * (z_bounds[1] - z_bounds[0])
-    )
-
-    return box_volume * inside / N
+    for x, y, z in points: 
+        if inside_intersection(x, y, z, k, R, r, xc, yc, zc):
+            inside += 1
+    
+    #Calculate the volume of the bounding box
+    bounds = bounding_box(k, R, r, xc, yc, zc)
+    volume_box = box_volume(bounds)
+    
+    #Estimate standard error for independent uniform samples
+    if method == "random":
+        error = estimate_standard_error(inside, N, volume_box)
+    else:
+        error = None
+    
+    # Estimate the intersection volume
+    volume = volume_box * inside / N
+    
+    return volume, error
 
 print("Case (a):", monte_carlo_volume(1, 0.75, 0.4, 100000))
 print("Case (b):", monte_carlo_volume(1, 0.5, 0.5, 100000))
