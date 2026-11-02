@@ -21,6 +21,18 @@ def bounding_box(k, R, r, xc=0, yc=0, zc=0):
 
     return x_bounds, y_bounds, z_bounds
 
+def box_volume(bounds):
+    volume = 1.0
+    for low, high in bounds:
+        volume *= high - low
+    return volume
+
+
+def estimate_standard_error(inside, N, box_volume):
+    #The standard error is given by the formula: SE = Volume_box * sqrt(p_hat * (1 - p_hat) / N)
+    p_hat = inside / N
+    return box_volume * math.sqrt(p_hat * (1 - p_hat) / N) 
+
 
 def generate_points(k, R, r, N):
     x_bounds, y_bounds, z_bounds = bounding_box(k, R, r) # generate random points
