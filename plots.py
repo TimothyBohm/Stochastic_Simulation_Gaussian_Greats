@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import random
 from Assignment import monte_carlo_volume
 from pathlib import Path
 from matplotlib.ticker import FuncFormatter
+<<<<<<< Updated upstream
 from Assignment import run_experiments
 import numpy as np
 from Assignment import (
@@ -10,6 +12,9 @@ from Assignment import (
     generate_logistic_points,
     monte_carlo_volume
 )
+=======
+from Assignment import run_experiments, run_mixture_experiments
+>>>>>>> Stashed changes
 
 #Create Figures folder if it doesn't exist
 figures_dir = Path(__file__).resolve().parent / "Figures"
@@ -28,7 +33,14 @@ N_b, volumes_b, errors_b = zip(*results_b)
 #Setting up and running the experiments for exercise 3(a)
 results_3a = run_experiments(1, 0.75, 0.4, sample_sizes, zc=0.1, rng=random.Random(69))
 
+# Extract results for exercise 3(a)
+N_3a, volumes_3a, errors_3a = zip(*results_3a)
 
+# Run experiments for exercise 3(b) across different p values
+p_values = [0.2, 0.5, 0.8]
+results_3b = {}
+for p in p_values:
+    results_3b[p] = run_mixture_experiments(1, 0.75, 0.4, sample_sizes, p=p, xc=0, yc=0, zc=0.1)
 
 #GRAPHS!!!
 #Convergence of volume estimates
@@ -113,6 +125,7 @@ plt.savefig(figures_dir / "volume_comparison.png", dpi=300, bbox_inches="tight")
 plt.show()
 
 
+<<<<<<< Updated upstream
 #Generatew Table for Question 1
 
 # TABLE for Monte Carlo results for Question 1
@@ -380,3 +393,148 @@ plt.savefig(
     bbox_inches='tight'
 )
 plt.show()
+=======
+
+
+
+# Exercise 3(b): Convergence and Bias comparison
+plt.figure(figsize=(9, 5))
+
+# Reference line for the baseline case (p = 1.0)
+plt.plot(N_3a, volumes_3a, marker='o', color='black', linewidth=2, label='Question 3(a) Baseline (p = 1.0)')
+
+# Lines for different values of p from the mixture proposal
+colors = {0.2: '#d62728', 0.5: '#ff7f0e', 0.8: '#1f77b4'}
+for p in p_values:
+    N_mix, vol_mix, _ = zip(*results_3b[p])
+    plt.plot(N_mix, vol_mix, marker='o', linestyle='--', color=colors[p], label=f'Mixture p = {p}')
+
+plt.xscale('log')
+plt.xticks([100, 500, 1000, 5000, 10000, 25000, 50000, 100000], 
+           ['100', '500', '1k', '5k', '10k', '25k', '50k', '100k'])
+plt.xlabel('Number of samples (N)')
+plt.ylabel('Estimated intersection volume')
+plt.title('Mixture Proposal Convergence & Bias', fontsize=14)
+plt.legend()
+plt.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig(figures_dir / "mixture_convergence_bias.png", dpi=300, bbox_inches="tight")
+plt.show()
+
+
+
+
+# Exercise 3(b): Standard Error comparison
+plt.figure(figsize=(9, 5))
+
+# Baseline error of Question 3(a) for reference
+plt.plot(N_3a, errors_3a, marker='o', color='black', linewidth=2, label='Question 3(a) Baseline (p = 1.0)')
+
+# Error lines for different values of p from the mixture proposal
+colors = {0.2: '#d62728', 0.5: '#ff7f0e', 0.8: '#1f77b4'}
+for p in p_values:
+    N_mix, _, err_mix = zip(*results_3b[p])
+    plt.plot(N_mix, err_mix, marker='o', linestyle='--', color=colors[p], label=f'Mixture p = {p}')
+
+plt.xscale('log')
+plt.xticks([100, 500, 1000, 5000, 10000, 25000, 50000, 100000], 
+           ['100', '500', '1k', '5k', '10k', '25k', '50k', '100k'])
+plt.xlabel('Number of samples (N)')
+plt.ylabel('Estimated standard error')
+plt.title('Question 3(b): Standard Error vs Sample Size', fontsize=14)
+plt.legend()
+plt.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig(figures_dir / "mixture_standard_error.png", dpi=300, bbox_inches="tight")
+plt.show()
+
+
+
+#THE 3D PLOTS BELOW!!! One which shows the geometry of the boxes B and S, and the other one which shows the MC simulations 
+# how the dots are more concentrated in box S:
+
+#3D PLOT 1: Geometry of the sphere, shifted torus, and boxes B and S
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+
+# 1. Sphere (k=1)
+u = np.linspace(0, 2 * np.pi, 30)
+v = np.linspace(0, np.pi, 30)
+xs = 1.0 * np.outer(np.cos(u), np.sin(v))
+ys = 1.0 * np.outer(np.sin(u), np.sin(v))
+zs = 1.0 * np.outer(np.ones(np.size(u)), np.cos(v))
+ax.plot_wireframe(xs, ys, zs, color='blue', alpha=0.15, label='Sphere (k=1)')
+
+# 2. Shifted Torus (R=0.75, r=0.4, zc=0.1)
+theta = np.linspace(0, 2 * np.pi, 30)
+phi = np.linspace(0, 2 * np.pi, 30)
+theta, phi = np.meshgrid(theta, phi)
+R, r, zc = 0.75, 0.4, 0.1
+xt = (R + r * np.cos(phi)) * np.cos(theta)
+yt = (R + r * np.cos(phi)) * np.sin(theta)
+zt = zc + r * np.sin(phi)
+ax.plot_surface(xt, yt, zt, color='orange', alpha=0.3, edgecolor='none')
+
+# Helper function to draw boxes
+def draw_box(ax, bounds, color, label, linestyle='-'):
+    (x_min, x_max), (y_min, y_max), (z_min, z_max) = bounds
+    corners = np.array([
+        [x_min, y_min, z_min], [x_max, y_min, z_min], [x_max, y_max, z_min], [x_min, y_max, z_min], [x_min, y_min, z_min],
+        [x_min, y_min, z_max], [x_max, y_min, z_max], [x_max, y_max, z_max], [x_min, y_max, z_max], [x_min, y_min, z_max]
+    ])
+    ax.plot(corners[:, 0], corners[:, 1], corners[:, 2], color=color, linestyle=linestyle, label=label)
+    for i in [(1, 6), (2, 7), (3, 8)]:
+        ax.plot([corners[i[0], 0], corners[i[1], 0]],
+                [corners[i[0], 1], corners[i[1], 1]],
+                [corners[i[0], 2], corners[i[1], 2]], color=color, linestyle=linestyle)
+
+# 3. Box B en Box S
+from Assignment import bounding_box, small_bounding_box
+bounds_B = bounding_box(1, 0.75, 0.4, xc=0, yc=0, zc=0.1)
+bounds_S = small_bounding_box(xc=0, yc=0, zc=0.1)
+
+draw_box(ax, bounds_B, color='black', label='Box B (Full)', linestyle='--')
+draw_box(ax, bounds_S, color='red', label='Box S (Small)', linestyle='-')
+
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+ax.set_title('3D View: Sphere, Shifted Torus, Box B and Box S', fontsize=13)
+ax.legend(loc='upper right')
+plt.tight_layout()
+plt.savefig(figures_dir / "3d_geometry_boxes.png", dpi=300)
+plt.show()
+
+#3D PLOT 2: Monte Carlo Simulations with Mixture Proposal:
+
+from Assignment import generate_mixture_points, inside_intersection
+
+fig2 = plt.figure(figsize=(10, 8))
+ax2 = fig2.add_subplot(111, projection='3d')
+
+# Generate a smaller number of points for visualization purposes :)
+N_vis = 2500
+pts = generate_mixture_points(1, 0.75, 0.4, N_vis, p=0.5, zc=0.1, rng=random.Random(46))
+
+inside_pts = [p for p in pts if inside_intersection(p[0], p[1], p[2], 1, 0.75, 0.4, zc=0.1)]
+outside_pts = [p for p in pts if not inside_intersection(p[0], p[1], p[2], 1, 0.75, 0.4, zc=0.1)]
+
+if inside_pts:
+    ix, iy, iz = zip(*inside_pts)
+    ax2.scatter(ix, iy, iz, color='green', s=6, label=f'Intersection Hits ({len(inside_pts)})')
+
+if outside_pts:
+    ox, oy, oz = zip(*outside_pts)
+    ax2.scatter(ox, oy, oz, color='gray', alpha=0.15, s=2, label=f'Misses ({len(outside_pts)})')
+
+draw_box(ax2, bounds_S, color='red', label='Box S Boundary', linestyle='-')
+
+ax2.set_xlabel('X')
+ax2.set_ylabel('Y')
+ax2.set_zlabel('Z')
+ax2.set_title('Mixture Sampling Density (N=2,500, p=0.5)', fontsize=13)
+ax2.legend(loc='upper right')
+plt.tight_layout()
+plt.savefig(figures_dir / "3d_sampling_density.png", dpi=300)
+plt.show()
+>>>>>>> Stashed changes
