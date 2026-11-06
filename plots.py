@@ -189,3 +189,194 @@ plt.savefig(
     bbox_inches='tight'
 )
 plt.show()
+
+
+# Question 2
+
+N = 100000
+k, R, r = 1, 0.75, 0.4
+
+random_points = generate_points(
+    k, R, r, N, rng=random.Random(42)
+)
+
+logistic_points = generate_logistic_points(
+    k, R, r, N,
+    x0=0.1, y0=0.2, z0=0.3
+)
+
+# Extract x-coordinates
+random_x = [point[0] for point in random_points]
+logistic_x = [point[0] for point in logistic_points]
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+axes[0].hist(
+    random_x, bins=50, density=True,
+    color='royalblue', alpha=0.8
+)
+axes[0].set_title('Uniform Random Sampling')
+
+axes[1].hist(
+    logistic_x, bins=50, density=True,
+    color='darkorange', alpha=0.8
+)
+axes[1].set_title('Logistic Map Sampling (m = 3.8)')
+
+for ax in axes:
+    ax.set_xlabel('x-coordinate')
+    ax.set_ylabel('Probability density')
+    ax.set_xlim(-1, 1)
+    ax.grid(alpha=0.2)
+
+plt.suptitle('Question 2: Sampling Distributions', fontsize=14, y=1.02)
+plt.tight_layout()
+plt.savefig(figures_dir / 'q2_distributions.png',
+            dpi=300, bbox_inches='tight')
+plt.show()
+
+
+#Question 2 Table Method comparison
+
+N = 100000
+columns = [
+    'Parameter', 'Case (a)', 'Case (b)'
+]
+
+data = []
+
+results = []
+
+for R, r in [(0.75, 0.4), (0.5, 0.5)]:
+
+    uniform, se = monte_carlo_volume(
+        1, R, r, N,
+        method='random',
+        rng=random.Random(42)
+    )
+
+    logistic, _ = monte_carlo_volume(
+        1, R, r, N,
+        method='logistic',
+        x0=0.1, y0=0.2, z0=0.3
+    )
+
+    difference = abs(logistic - uniform)
+    percentage = difference / uniform * 100
+
+    results.append((uniform, se, logistic,
+                    difference, percentage))
+
+a, b = results
+
+data = [
+    ['Sample size', f'{N:,}', f'{N:,}'],
+    ['Uniform estimate', f'{a[0]:.6f}', f'{b[0]:.6f}'],
+    ['Uniform standard error', f'{a[1]:.6f}', f'{b[1]:.6f}'],
+    ['Logistic estimate', f'{a[2]:.6f}', f'{b[2]:.6f}'],
+    ['Absolute difference', f'{a[3]:.6f}', f'{b[3]:.6f}'],
+    ['Relative difference',
+     f'{a[4]:.3f}%', f'{b[4]:.3f}%']
+]
+
+fig, ax = plt.subplots(figsize=(10, 3.5))
+ax.axis('off')
+
+table = ax.table(
+    cellText=data,
+    colLabels=columns,
+    cellLoc='center',
+    loc='center'
+)
+
+table.auto_set_font_size(False)
+table.set_fontsize(11)
+table.scale(1, 1.8)
+
+for j in range(3):
+    table[(0, j)].set_facecolor('#DCE6F1')
+    table[(0, j)].set_text_props(weight='bold')
+
+plt.title('Question 2: Sampling Method Comparison', pad=20, fontsize=14)
+plt.tight_layout()
+
+plt.savefig(figures_dir / 'q2_table.png',
+            dpi=300, bbox_inches='tight')
+plt.show()
+
+#Question 3a
+
+# QUESTION 3.a: Convergence with multiple random seeds
+
+sample_sizes = [
+    100, 250, 500, 1000, 2500, 5000,
+    10000, 20000, 30000, 50000,
+    75000, 100000
+]
+
+seeds = [42, 123, 456]
+
+cases = [
+    ("Centered torus (Q1.a)", 0, "royalblue"),
+    ("Shifted torus (Q3.a)", 0.1, "darkorange")
+]
+
+plt.figure(figsize=(9, 5))
+
+for label, zc, color in cases:
+    final_volumes = []
+
+    for seed in seeds:
+        # Restart the generator for each sample size
+        results = []
+
+        for N in sample_sizes:
+            volume, error = monte_carlo_volume(
+                1, 0.75, 0.4, N,
+                zc=zc,
+                rng=random.Random(seed)
+            )
+            results.append(volume)
+
+        final_volumes.append(results[-1])
+
+        plt.plot(
+            sample_sizes,
+            results,
+            color=color,
+            alpha=0.45,
+            linewidth=1.5,
+            marker='o',
+            markersize=3
+        )
+
+    # Average final estimate across the three seeds
+    mean_final = np.mean(final_volumes)
+
+    plt.axhline(
+        mean_final,
+        color=color,
+        linestyle='--',
+        linewidth=2,
+        label=f'{label}: mean at 100k = {mean_final:.4f}'
+    )
+
+plt.xscale('log')
+plt.xticks(
+    [100, 1000, 10000, 100000],
+    ['100', '1k', '10k', '100k']
+)
+
+plt.xlabel('Number of samples (N)')
+plt.ylabel('Estimated intersection volume')
+plt.title('Monte Carlo Convergence Across Three Random Seeds', fontsize=14)
+plt.grid(alpha=0.3)
+plt.legend()
+plt.tight_layout()
+
+plt.savefig(
+    figures_dir / 'q3a_multiple_seeds.png',
+    dpi=300,
+    bbox_inches='tight'
+)
+plt.show()

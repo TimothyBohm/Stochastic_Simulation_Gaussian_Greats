@@ -110,7 +110,10 @@ def monte_carlo_volume(k, R, r, N, method="random", p=0.5,
     if method == "random":
         points = generate_points(k, R, r, N, xc, yc, zc, rng)
     elif method == "logistic":
-        points = generate_logistic_points(k, R, r, N, x0, y0, z0, xc, yc, zc)
+        points = generate_logistic_points(
+            k, R, r, N, x0, y0, z0,
+            m=3.8, xc=xc, yc=yc, zc=zc
+        )
     elif method == "mixture":
         points = generate_mixture_points(k, R, r, N, p, xc, yc, zc, rng)
     else:
@@ -165,3 +168,18 @@ def run_mixture_experiments(k, R, r, sample_sizes, p=0.5, xc=0, yc=0, zc=0.1, rn
 
     return results
 
+
+
+
+
+points = generate_logistic_points(
+    1, 0.75, 0.4, 100000,
+    x0=0.1, y0=0.2, z0=0.3
+)
+
+inside = sum(
+    inside_intersection(x, y, z, 1, 0.75, 0.4)
+    for x, y, z in points
+)
+
+print("Points inside:", inside)
