@@ -125,7 +125,6 @@ plt.savefig(figures_dir / "volume_comparison.png", dpi=300, bbox_inches="tight")
 plt.show()
 
 
-<<<<<<< Updated upstream
 #Generatew Table for Question 1
 
 # TABLE for Monte Carlo results for Question 1
@@ -393,7 +392,6 @@ plt.savefig(
     bbox_inches='tight'
 )
 plt.show()
-=======
 
 
 
@@ -450,8 +448,7 @@ plt.show()
 
 
 
-#THE 3D PLOTS BELOW!!! One which shows the geometry of the boxes B and S, and the other one which shows the MC simulations 
-# how the dots are more concentrated in box S:
+#THE 3D PLOT BELOW!!! One which shows the geometry of the boxes B and S:
 
 #3D PLOT 1: Geometry of the sphere, shifted torus, and boxes B and S
 fig = plt.figure(figsize=(10, 8))
@@ -504,37 +501,3 @@ ax.legend(loc='upper right')
 plt.tight_layout()
 plt.savefig(figures_dir / "3d_geometry_boxes.png", dpi=300)
 plt.show()
-
-#3D PLOT 2: Monte Carlo Simulations with Mixture Proposal:
-
-from Assignment import generate_mixture_points, inside_intersection
-
-fig2 = plt.figure(figsize=(10, 8))
-ax2 = fig2.add_subplot(111, projection='3d')
-
-# Generate a smaller number of points for visualization purposes :)
-N_vis = 2500
-pts = generate_mixture_points(1, 0.75, 0.4, N_vis, p=0.5, zc=0.1, rng=random.Random(46))
-
-inside_pts = [p for p in pts if inside_intersection(p[0], p[1], p[2], 1, 0.75, 0.4, zc=0.1)]
-outside_pts = [p for p in pts if not inside_intersection(p[0], p[1], p[2], 1, 0.75, 0.4, zc=0.1)]
-
-if inside_pts:
-    ix, iy, iz = zip(*inside_pts)
-    ax2.scatter(ix, iy, iz, color='green', s=6, label=f'Intersection Hits ({len(inside_pts)})')
-
-if outside_pts:
-    ox, oy, oz = zip(*outside_pts)
-    ax2.scatter(ox, oy, oz, color='gray', alpha=0.15, s=2, label=f'Misses ({len(outside_pts)})')
-
-draw_box(ax2, bounds_S, color='red', label='Box S Boundary', linestyle='-')
-
-ax2.set_xlabel('X')
-ax2.set_ylabel('Y')
-ax2.set_zlabel('Z')
-ax2.set_title('Mixture Sampling Density (N=2,500, p=0.5)', fontsize=13)
-ax2.legend(loc='upper right')
-plt.tight_layout()
-plt.savefig(figures_dir / "3d_sampling_density.png", dpi=300)
-plt.show()
->>>>>>> Stashed changes
